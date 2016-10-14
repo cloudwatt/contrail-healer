@@ -1,11 +1,9 @@
-import json
 import socket
 import logging
 
-from kombu import Connection, Exchange, Queue
+from kombu import Connection, Exchange, Queue, Consumer
 
 import gevent
-from gevent.pool import Group
 
 from contrail_api_cli.manager import CommandManager
 from contrail_api_cli.command import Command, Option
@@ -18,7 +16,6 @@ from pool import Pool
 VNC_EXCHANGE = 'vnc_config.object-update'
 logger = logging.getLogger(__name__)
 pool = Pool()
-heal_group = Group()
 
 
 class ConnectionLost(Exception):
@@ -50,14 +47,13 @@ class Heal(Command):
         self._register_healers()
         self._start_healers()
         self._setup()
+        self._start()
 
     def _setup(self):
-        self.conn = Connection("amqp://%s/%s" % (self.rabbit_url, self.rabbit_vhost),
-                               heartbeat=10)
+        self.conn = Connection("amqp://%s/%s" % (self.rabbit_url, self.rabbit_vhost))
         try:
             self.conn.connect()
         except (socket.timeout, socket.error):
-            self._cleanup()
             raise CommandError("Failed to connect to RabbitMQ server")
 
         exchange = Exchange(VNC_EXCHANGE, 'fanout', durable=False)(self.conn)
@@ -65,50 +61,41 @@ class Heal(Command):
         self.queue = Queue("contrail-healer", exchange, durable=False)(self.conn.channel())
         self.queue.declare()
 
+        self.consumer = Consumer(self.conn.channel(),
+                                 queues=[self.queue],
+                                 callbacks=[self._process])
+
+    def _start(self):
+        self.consumer.consume()
         try:
-            heal_group.add(gevent.spawn(self._process))
-            heal_group.add(gevent.spawn(self._heartbeat))
-            heal_group.join(raise_error=True)
-        except ConnectionLost:
-            printo("Lost connection to RabbitMQ. Reconnecting")
+            while True:
+                self.conn.drain_events()
+                gevent.sleep(0.5)
+        except IOError:
+            printo("Disconnected from RabbitMQ server, reconnecting")
             self._setup()
+            self._start()
         except KeyboardInterrupt:
             self._cleanup()
             raise
 
     def _cleanup(self):
-        logger.debug("Killing running greenlets...")
-        heal_group.kill()
+        logger.debug("Doing some cleanup...")
+        self.consumer.cancel()
         pool.kill()
 
-    def _heartbeat(self):
-        if self.conn.connected:
-            self.conn.heartbeat_check()
-            gevent.sleep(5)
-            self._heartbeat()
+    def _process(self, body, message):
+        try:
+            resource = body['type']
+            oper = body['oper']
+        except KeyError:
+            pass
         else:
-            raise ConnectionLost()
-
-    def _process(self):
-        while True:
-            try:
-                msg = self.queue.get()
-            except IOError:
-                raise ConnectionLost()
-            if msg is not None:
-                try:
-                    body = json.loads(msg.body)
-                    resource = body['type']
-                    oper = body['oper']
-                except (ValueError, KeyError):
-                    pass
-                else:
-                    healers = self._healers.get(resource, {}).get(oper, [])
-                    if healers:
-                        pool.spawn(self._broadcast, healers, body)
-                finally:
-                    msg.ack()
-            gevent.sleep(0.1)
+            healers = self._healers.get(resource, {}).get(oper, [])
+            if healers:
+                pool.spawn(self._broadcast, healers, body)
+        finally:
+            message.ack()
 
     def _broadcast(self, healers, body):
         """Send notification to concerned healers.
