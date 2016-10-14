@@ -10,7 +10,6 @@ from contrail_api_cli.manager import CommandManager
 from contrail_api_cli.command import Command, Option
 from contrail_api_cli.resource import Resource
 from contrail_api_cli.exceptions import CommandError
-from contrail_api_cli.utils import printo
 
 from pool import Pool
 
@@ -76,7 +75,7 @@ class Heal(Command):
                 self.conn.drain_events()
                 gevent.sleep(0.5)
         except IOError:
-            printo("Disconnected from RabbitMQ server, reconnecting")
+            logger.info("Disconnected from RabbitMQ server, reconnecting")
             self._setup()
             self._start()
         except KeyboardInterrupt:
@@ -135,5 +134,4 @@ class Heal(Command):
         for resource_type, opers in self._healers.items():
             for oper, healers in opers.items():
                 for healer in healers:
-                    printo("Starting healer %s" % healer)
                     pool.spawn(healer.start)

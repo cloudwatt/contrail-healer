@@ -226,15 +226,43 @@ class Healer(Command):
         else:
             self.log("%s is OK" % r)
 
-    def log(self, message, type=None):
-        message = '[%s] %s' % (self.__class__.__name__, message)
-        methods = {
-            None: printo,
+    @property
+    def has_json_formatter(self):
+        if hasattr(self, '_json_format'):
+            return self._json_format
+        self._json_format = False
+        try:
+            import pythonjsonlogger.jsonlogger
+        except ImportError:
+            pass
+        else:
+            for handler in logger.handlers:
+                if isinstance(handler.formatter, pythonjsonlogger.jsonlogger.JsonFormatter):
+                    self._json_format = True
+        finally:
+            return self._json_format
+
+    @property
+    def log_methods(self):
+        if hasattr(self, '_log_methods'):
+            return self._log_methods
+        self._log_methods = {
             'debug': logger.debug,
             'warning': logger.warning,
             'error': logger.error
         }
-        methods[type](message)
+        if self.has_json_formatter:
+            self._log_methods['info'] = logger.info
+        else:
+            self._log_methods['info'] = printo
+        return self._log_methods
+
+    def log(self, message, type='info'):
+        if self.has_json_formatter:
+            self.log_methods[type](message, extra={'healer': self.__class__.__name__})
+        else:
+            message = '[%s] %s' % (self.__class__.__name__, message)
+            self.log_methods[type](message)
 
     def log_debug(self, message):
         self.log(message, type='debug')
