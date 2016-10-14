@@ -48,16 +48,16 @@ class Heal(Command):
         self.rabbit_vhost = rabbit_vhost
         self._healers = {}
 
+        self._setup()
         self._register_healers()
         self._start_healers()
-        self._setup()
         self._start()
 
     def _setup(self):
         self.conn = Connection("amqp://%s/%s" % (self.rabbit_url, self.rabbit_vhost))
         try:
             self.conn.connect()
-        except (socket.timeout, socket.error):
+        except (socket.timeout, socket.error, IOError):
             raise CommandError("Failed to connect to RabbitMQ server")
 
         exchange = Exchange(VNC_EXCHANGE, 'fanout', durable=False)(self.conn)
