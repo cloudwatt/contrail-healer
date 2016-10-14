@@ -1,3 +1,4 @@
+import os
 import socket
 import logging
 
@@ -35,9 +36,12 @@ class Heal(Command):
     Usage::
 
         contrail-api-cli heal --rabbit-url user:pass@server:port --rabbit-vhost opencontrail
+
+    The url and vhost can also be sourced from the environment variables
+    `$CONTRAIL_HEALER_RABBIT_URL` and `$CONTRAIL_HEALER_RABBIT_VHOST`.
     """
-    rabbit_url = Option(required=True)
-    rabbit_vhost = Option(default="opencontrail")
+    rabbit_url = Option(default=os.environ.get('CONTRAIL_HEALER_RABBIT_URL'))
+    rabbit_vhost = Option(default=os.environ.get('CONTRAIL_HEALER_RABBIT_VHOST'))
 
     def __call__(self, rabbit_url=None, rabbit_vhost=None):
         self.rabbit_url = rabbit_url
