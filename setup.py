@@ -1,6 +1,7 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 install_requires = [
+    'contrail-api-cli',
     'kombu',
     'kazoo',
 ]
@@ -17,6 +18,7 @@ setup(
     maintainer="Jean-Philippe Braun",
     maintainer_email="jean-philippe.braun@cloudwatt.com",
     url="http://www.github.com/cloudwatt/contrail-healer",
+    packages=find_packages(),
     install_requires=install_requires,
     scripts=[],
     license="MIT",
