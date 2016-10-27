@@ -37,5 +37,6 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2.7'
     ],
-    keywords='contrail api cli'
+    keywords='contrail api cli',
+    test_suite='contrail_healer.tests'
 )
