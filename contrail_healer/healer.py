@@ -174,11 +174,14 @@ class Healer(Command):
     def _work(self):
         timer = Timer(self.buffer_timeout)
         while True:
-            if not self._buffer.full() and timer.ready is False:
-                gevent.sleep(0.3)
+            if self._buffer.empty():
+                self.log_debug("buffer is empty")
+                timer.reset()
+                gevent.sleep(0.1)
                 continue
-            elif self._buffer.empty():
-                gevent.sleep(0.3)
+            elif not self._buffer.full() and timer.ready is False:
+                self.log_debug("buffer is not full and timer is not ready")
+                gevent.sleep(0.1)
                 continue
             else:
                 if timer.ready:
