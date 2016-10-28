@@ -21,6 +21,10 @@ logger = logging.getLogger(__name__)
 pool = Pool()
 
 
+HEALER_PARAMS = ('buffer_timeout', 'buffer_size',
+                 'check_delay', 'max_check_retries')
+
+
 class HealerError(gevent.GreenletExit):
     pass
 
@@ -154,6 +158,11 @@ class Healer(Command):
                                       os.path.expanduser('~/.config/contrail-healer/%s' % self.config_file)])
             if len(reads) == 0:
                 raise CommandError('Failed to read configuration')
+
+            for (config_key, config_value) in self.config.items('default'):
+                if config_key in HEALER_PARAMS:
+                    self.log_debug("Setting %s = %s" % (config_key, config_value))
+                    setattr(self, config_key, config_value)
         else:
             self.config = None
 
