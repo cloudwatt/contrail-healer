@@ -2,7 +2,10 @@ import os
 import abc
 import logging
 from six import add_metaclass
-from ConfigParser import ConfigParser
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
 
 import gevent
 from gevent.queue import Queue, Empty
@@ -11,7 +14,7 @@ from contrail_api_cli.command import Command
 from contrail_api_cli.exceptions import CommandError
 from contrail_api_cli.utils import printo
 
-from pool import Pool
+from .pool import Pool
 
 
 logger = logging.getLogger(__name__)

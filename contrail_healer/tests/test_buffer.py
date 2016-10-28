@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import gevent
 import unittest
 
-from contrail_healer.healer import Healer
+from ..healer import Healer
 
 
 class TestHealer(Healer):

@@ -11,7 +11,7 @@ from contrail_api_cli.command import Command, Option
 from contrail_api_cli.resource import Resource
 from contrail_api_cli.exceptions import CommandError
 
-from pool import Pool
+from .pool import Pool
 
 VNC_EXCHANGE = 'vnc_config.object-update'
 logger = logging.getLogger(__name__)
