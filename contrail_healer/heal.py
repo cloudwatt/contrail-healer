@@ -4,8 +4,6 @@ import logging
 
 from kombu import Connection, Exchange, Queue, Consumer
 
-import gevent
-
 from contrail_api_cli.manager import CommandManager
 from contrail_api_cli.command import Command, Option
 from contrail_api_cli.resource import Resource
@@ -73,7 +71,6 @@ class Heal(Command):
         try:
             while True:
                 self.conn.drain_events()
-                gevent.sleep(0.5)
         except IOError:
             logger.info("Disconnected from RabbitMQ server, reconnecting")
             self._setup()
