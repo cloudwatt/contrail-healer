@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import os
 import socket
 import logging
@@ -59,7 +62,8 @@ class Heal(Command):
 
         exchange = Exchange(VNC_EXCHANGE, 'fanout', durable=False)(self.conn)
 
-        self.queue = Queue("contrail-healer", exchange, durable=False)(self.conn.channel())
+        self.queue = Queue("contrail-healer", exchange,
+                           durable=False, auto_delete=True)(self.conn.channel())
         self.queue.declare()
 
         self.consumer = Consumer(self.conn.channel(),

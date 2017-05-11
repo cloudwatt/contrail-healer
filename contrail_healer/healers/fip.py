@@ -1,12 +1,15 @@
-from netaddr import IPAddress, IPNetwork
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
-from ..healer import Healer, Operation
+from netaddr import IPAddress, IPNetwork
 
 from kazoo.client import KazooClient
 from kazoo.handlers.gevent import SequentialGeventHandler
 
 from contrail_api_cli.exceptions import CommandError, ResourceNotFound
 from contrail_api_cli.resource import Resource
+
+from ..healer import Healer, Operation
 
 
 class FIPHealer(Healer):

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import os
 import abc
 import logging
@@ -272,21 +275,21 @@ class Healer(Command):
             self._log_methods['info'] = printo
         return self._log_methods
 
-    def log(self, message, type='info'):
+    def log(self, message, msg_type='info'):
         if self.has_json_formatter:
-            self.log_methods[type](message, extra={'healer': self.__class__.__name__})
+            self.log_methods[msg_type](message, extra={'healer': self.__class__.__name__})
         else:
             message = '[%s] %s' % (self.__class__.__name__, message)
-            self.log_methods[type](message)
+            self.log_methods[msg_type](message)
 
     def log_debug(self, message):
-        self.log(message, type='debug')
+        self.log(message, msg_type='debug')
 
     def log_warning(self, message):
-        self.log(message, type='warning')
+        self.log(message, msg_type='warning')
 
     def log_error(self, message):
-        self.log(message, type='error')
+        self.log(message, msg_type='error')
 
     def __call__(self):
         # a Healer cannot be called alone for now.

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Module used internally for tracking running greenlets.
 """
 from __future__ import unicode_literals
